@@ -1,4 +1,5 @@
 # Introduction to Security Contexts and SCCs
+Written by Alexandre Menezes
 
 With Role Based Access Control we have an Openshift wide tool to determine what each user can do, meaning the verbs that can be used, against what objects in the API. For that, rules are defined combining resources with the API verbs into sets called roles and with the role binding we attribute those rules to users. Once we have those Users or Service Accounts, we can attribute them to particular resources to give them access to those actions. For example, a Pod may be able to delete a ConfigMap but not a Secret when running under a specific Service Account. That's an upper level control plane feature that doesn't take into account the underlay node permission model, meaning the unix permission model, and some of it's kernel newer sophistications. 
 
