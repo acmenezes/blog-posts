@@ -34,9 +34,11 @@ From there we have fields such as apparmorProfile, capabilities or selinuxLabel.
 We can use podman, for example, for testing or development, running isolated containers or pods. It allows us to do it with special privileges as we show below:
 
 Privileged bash terminal:
+
 `sudo podman run --privileged -it registry.access.redhat.com/rhel7/rhel /bin/bash`
 
 Process ntpd with privilege to change the system clock:
+
 `sudo podman run -d --cap-add SYS_TIME ntpd`
 
 
