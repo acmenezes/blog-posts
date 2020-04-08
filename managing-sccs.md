@@ -130,7 +130,7 @@ Repeating the process we did for the user we can grant an SCC to a service accou
 
 `oc adm policy add-scc-to-user nonroot -z my-app-sa`
 ```
-securitycontextconstraints.security. OpenShift.io/nonroot added to: ["system:serviceaccount:scc-test:my-app-sa"]
+securitycontextconstraints.security.openshift.io/nonroot added to: ["system:serviceaccount:scc-test:my-app-sa"]
 ```
 Let’s check now what’s under the users field:
 `oc get scc nonroot -o yaml`
@@ -195,32 +195,32 @@ Troubleshooting SCCs can be quite challenging since it has so many ways to be co
 `oc adm policy who-can use scc nonroot`
 
 ```
-resourceaccessreviewresponse.authorization. OpenShift.io/<unknown>
+resourceaccessreviewresponse.authorization.openshift.io/<unknown>
 
 Namespace: scc-test
 Verb:      use
-Resource:  securitycontextconstraints.security. OpenShift.io
+Resource:  securitycontextconstraints.security.openshift.io
 
 Users:  system:admin
-        system:serviceaccount: OpenShift-apiserver-operator: OpenShift-apiserver-operator
-        system:serviceaccount: OpenShift-apiserver: OpenShift-apiserver-sa
-        system:serviceaccount: OpenShift-authentication-operator:authentication-operator
-        system:serviceaccount: OpenShift-authentication:oauth- OpenShift
-        system:serviceaccount: OpenShift-cluster-node-tuning-operator:cluster-node-tuning-operator
-        system:serviceaccount: OpenShift-cluster-version:default
-        system:serviceaccount: OpenShift-controller-manager-operator: OpenShift-controller-manager-operator
-        system:serviceaccount: OpenShift-kube-apiserver-operator:kube-apiserver-operator
-        system:serviceaccount: OpenShift-kube-apiserver:installer-sa
-        system:serviceaccount: OpenShift-kube-controller-manager-operator:kube-controller-manager-operator
-        system:serviceaccount: OpenShift-kube-controller-manager:installer-sa
-        system:serviceaccount: OpenShift-kube-scheduler-operator: OpenShift-kube-scheduler-operator
-        system:serviceaccount: OpenShift-kube-scheduler:installer-sa
-        system:serviceaccount: OpenShift-machine-config-operator:default
-        system:serviceaccount: OpenShift-network-operator:default
-        system:serviceaccount: OpenShift-operator-lifecycle-manager:olm-operator-serviceaccount
-        system:serviceaccount: OpenShift-service-ca-operator:service-ca-operator
-        system:serviceaccount: OpenShift-service-catalog-apiserver-operator: OpenShift-service-catalog-apiserver-operator
-        system:serviceaccount: OpenShift-service-catalog-controller-manager-operator: OpenShift-service-catalog-controller-manager-operator
+        system:serviceaccount: openshift-apiserver-operator: openshift-apiserver-operator
+        system:serviceaccount: openshift-apiserver: openshift-apiserver-sa
+        system:serviceaccount: openshift-authentication-operator:authentication-operator
+        system:serviceaccount: openshift-authentication:oauth- openshift
+        system:serviceaccount: openshift-cluster-node-tuning-operator:cluster-node-tuning-operator
+        system:serviceaccount: openshift-cluster-version:default
+        system:serviceaccount: openshift-controller-manager-operator: openshift-controller-manager-operator
+        system:serviceaccount: openshift-kube-apiserver-operator:kube-apiserver-operator
+        system:serviceaccount: openshift-kube-apiserver:installer-sa
+        system:serviceaccount: openshift-kube-controller-manager-operator:kube-controller-manager-operator
+        system:serviceaccount: openshift-kube-controller-manager:installer-sa
+        system:serviceaccount: openshift-kube-scheduler-operator: openshift-kube-scheduler-operator
+        system:serviceaccount: openshift-kube-scheduler:installer-sa
+        system:serviceaccount: openshift-machine-config-operator:default
+        system:serviceaccount: openshift-network-operator:default
+        system:serviceaccount: openshift-operator-lifecycle-manager:olm-operator-serviceaccount
+        system:serviceaccount: openshift-service-ca-operator:service-ca-operator
+        system:serviceaccount: openshift-service-catalog-apiserver-operator: openshift-service-catalog-apiserver-operator
+        system:serviceaccount: openshift-service-catalog-controller-manager-operator: openshift-service-catalog-controller-manager-operator
 Groups: system:cluster-admins
         system:masters
 
