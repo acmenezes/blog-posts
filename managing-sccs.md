@@ -1,33 +1,33 @@
-# Managing SCCs inOpenShift
+# Managing SCCs in OpenShift
 
 
-On the first post we looked into Linux and process privileges and saw how containers have the exact same behaviours. We saw that those privileges are specific to the Linux user that the container process runs under. Also how security context is a special configuration that can be set on your pod or container manifest to request from theOpenShift API some of those privileges. And finally, we concluded showing that Security Context Constraints are the tool provided byOpenShift to control what kind of privileges being requested for each pod is allowed on the platform.
+On the first post we looked into Linux and process privileges and saw how containers have the exact same behaviours. We saw that those privileges are specific to the Linux user that the container process runs under. Also how security context is a special configuration that can be set on your pod or container manifest to request from the OpenShift API some of those privileges. And finally, we concluded showing that Security Context Constraints are the tool provided by OpenShift to control what kind of privileges being requested for each pod is allowed on the platform.
 
 
 #### How does it actually work under the hood?
 
-Unfolding a little bit more on how the SCCs work we may ask: what insideOpenShift takes care of checking if a Pod complies or not to it? The admission process in the API server will take care of that. OpenShift comes equipped with 8 predefined Security Context Constraints that you can list using the `oc get scc` command. For those who are not familiar with them, here they are in an attempt to list from most restrictive to the least (but check the comments):
+Unfolding a little bit more on how the SCCs work we may ask: what inside   OpenShift takes care of checking if a Pod complies or not to it? The admission process in the API server will take care of that. OpenShift comes equipped with 8 predefined Security Context Constraints that you can list using the `oc get scc` command. For those who are not familiar with them, here they are in an attempt to list from the most restrictive to the least (but check the comments):
 |  SCC   |   Description  | Comments |
 |--------| ---------------|----------|
 |restricted|restricted denies access to all host features and requires pods to be run with a UID, and SELinux context that are allocated to the namespace.  This is the most restrictive SCC and it is used by default for authenticated users|In other words this is the most secure one. We explain it in detail further in this blog post.|
 |nonroot|nonroot provides all features of the restricted SCC but allows users to run with any non-root UID. The user must specify the UID or it must be specified on the manifest of the container runtime.|Applications that need predictable non root UIDs with the same other  restricted SCC security features can use this SCC as long as they inform the UID in their manifest.|
-|anyuid|anyuid provides all features of the restricted SCC but allows users to run with any UID and any GID.|platforms such as kubernetes andOpenShift this will be the equivalent as allowing UID 0, or root user, both inside and outside the container. That will be discussed in further blog posts. SELinux plays an important role here adding a layer of protection and it's a good idea to use seccomp to filter non desired system calls as well.|
+|anyuid|anyuid provides all features of the restricted SCC but allows users to run with any UID and any GID.| In platforms such as kubernetes and OpenShift this will be the equivalent as allowing UID 0, or root user, both inside and outside the container. That will be discussed in further blog posts. SELinux plays an important role here adding a layer of protection and it's a good idea to use seccomp to filter non desired system calls as well.|
 |hostmount-anyuid|hostmount-anyuid provides all the features of the restricted SCC but allows host mounts and any UID by a pod.  This is primarily used by the persistent volume recycler. WARNING: this SCC allows host file system access as any UID, including UID 0.  Grant with caution.|Same warnings as anyuid but here it goes a bit further and allows mounting host volumes as well. Remark that the volume recycler mentioned on the description is a trusted workload and an essential infrastructure piece.|
-|hostnetwork|hostnetwork allows using host networking and host ports but still requires pods to be run with a UID and SELinux context that are allocated to the namespace|Here the pod/container will be able to "see and use" the host network stack directly. Non zero UID and pre-allocated SELinux context will help put another layer of security.|
+|hostnetwork|hostnetwork allows using host networking and host ports but still requires pods to be run with a UID and SELinux context that are allocated to the namespace|Here the pod/container will be able to "see and use" the host network stack directly. Non zero UID and pre-allocated SELinux context will help to put another layer of security.|
 |node-exporter|node-exporter scc is used for the Prometheus node exporter|The node-exporter was designed for Prometheus to retrieve metrics from the cluster. It allows access to the host network, host PIDS, and host volumes, but not host IPC. Also allows anyuid. Not to be used by another application.|
-|hostaccess|hostaccess allows access to all host namespaces but still requires pods to be run with a UID and SELinux context that are allocated to the namespace. WARNING: this SCC allows host access to namespaces, file systems, and PIDS.  It should only be used by trusted pods.  Grant with caution.|Host namespaces mean outside the pod or container namespace or node/root linux namespace. It is true that restricting UID and using SELinux will put a layer of security to protect the node. But still, it's a very relaxed SCC and should be used only by absolutely necessary trusted workloads.|
-|Privileged|privileged allows access to all privileged and host features and the ability to run as any user, any group, any fsGroup, and with any SELinux context.  WARNING: this is the most relaxed SCC and should be used only for cluster administration. Grant with caution.|This scc allows a pod/container to control everything in the host/worker nodes or even in other containers. It's the most privileged and relaxed SCC policy. Only trusted workloads should use this and a discussion if it should be used in production or not is valid. A pod with that can administer the whole cluster.|
+|hostaccess|hostaccess allows access to all host namespaces but still requires pods to be run with a UID and SELinux context that are allocated to the namespace. WARNING: this SCC allows host access to namespaces, file systems, and PIDS.  It should only be used by trusted pods.  Grant with caution.|Host namespaces, in the description, mean outside the pod or container namespaces or, yet, we can call it node or root Linux namespaces. It is true that restricting UID and using SELinux will put a layer of security to protect the node. But still, it's a very relaxed SCC and should be used only by absolutely necessary trusted workloads.|
+|Privileged|privileged allows access to all privileged and host features and the ability to run as any user, any group, any fsGroup, and with any SELinux context.  WARNING: this is the most relaxed SCC and should be used only for cluster administration. Grant with caution.|This scc allows a pod/container to control everything in the host/worker nodes or even in other containers. It's the most privileged and relaxed SCC policy. Only trusted workloads should use this and a discussion if it should be used in production or not is valid. A privileged pod can control the host completely.|
 
 
-By default, inOpenShift, all pods and containers will use the Restricted SCC. Therefore they will be checked against it in the API server when requested. We will discuss more in depth some of those SCCs further and explore some security considerations we should keep in mind if not using the restricted SCC.
+By default, in OpenShift, all pods and containers will use the Restricted SCC. Therefore they will be checked against it in the API server when requested. We will discuss more in depth some of those SCCs further and explore some security considerations we should keep in mind if not using the restricted SCC.
 
 But in order to grant additional permissions, beyond those acquired with the restricted SCC, we need to make use of a different SCC. That can be one of those listed predefined SCCs or a custom built SCC. For that, we grant the permission to use the specified SCC to users, service accounts or groups.
 
-When first requesting a pod to the API server, the credential to authorize the pod will be the user account requesting it. After that the pod itself will be running under its service account. If we don't specify a service account for our pod it will use the default service account available on the namespace it’s running. But every pod will run under a service account. So based on the user, service account and/or groups that the service account belongs to, the admission process responsible for checking the requested privileges will find the set of SCCs available and verify if there is a match between the requested resource security context and the constraints. If there is a match the pod is accepted otherwise it's rejected.
+When first requesting a pod to the API server, the credential to authorize the pod will be the user account requesting it. After that, the pod itself will be running under its service account. If we don't specify a service account for our pod it is automatically assigned the default service account available on the namespace it’s running. But every pod will run under a service account. So based on the user, service account and/or groups that the service account belongs to, the admission process responsible for checking the requested privileges will find the set of SCCs available and verify if there is a match between the requested resource security context and the constraints. If there is a match the pod is accepted otherwise it's rejected.
 
 <img src='img/SCC_Admission_Simplified.png'></img>
 
-So the object requested only gets stored in Etcd, initiating a new pod creation, when it gets validated and matches the SCCs available otherwise it gets rejected and all the errors are logged. This is to get an idea of the complicated process that you can find on the apiserver-library-go (https://github.com/ OpenShift/apiserver-library-go/blob/master/pkg/securitycontextconstraints/sccadmission/admission.go)
+So the object requested only gets stored in Etcd, initiating a new pod creation, when it gets validated and matches the SCCs available otherwise it gets rejected and all the errors are logged. This is to get an idea of the complicated process that you can find on the apiserver-library-go (https://github.com/openshift/apiserver-library-go/blob/master/pkg/securitycontextconstraints/sccadmission/admission.go)
 
 #### Caution: 
 
@@ -37,9 +37,9 @@ Be careful when using the oc command line interface to deploy pods!!! Normally w
 
 #### Managing SCCs with the oc command line interface
 
-Security Context Constraints areOpenShift objects as any other object. So the classic verbs used with the `oc` command can also be used with SCCs. Tasks such as describing, listing, creating, deleting and editing use the same command syntax as anything else. You need to be logged in with admin privileges in order to change or delete SCCs though.
+Security Context Constraints are OpenShift objects as any other object. So the classic verbs used with the `oc` command can also be used with SCCs. Tasks such as describing, listing, creating, deleting and editing use the same command syntax as anything else. You need to be logged in with admin privileges in order to change or delete SCCs though.
 
-So basically try `oc get scc` to list the available ones, `oc describe scc <scc name>` to check specific field values, `oc edit scc <scc name>` to change values or the `oc delete` to delete one. Remember that it is not a good practice to edit the predefined SCCs that come embedded withOpenShift. And of course you can specify an SCC yaml manifest and hit `oc create -f my-scc.yaml` such as the one below taken from the docs:
+So basically try `oc get scc` to list the available ones, `oc describe scc <scc name>` to check specific field values, `oc edit scc <scc name>` to change values or the `oc delete` to delete one. Remember that it is not a good practice to edit the predefined SCCs that come embedded with OpenShift. And of course you can specify an SCC yaml manifest and hit `oc create -f my-scc.yaml` such as the one below taken from the docs:
 
 ```
 kind: SecurityContextConstraints
@@ -60,7 +60,7 @@ users:
 groups:
 - my-admin-group
 ```
-Other than that for the SCC commands check [here](https://docs. OpenShift.com/container-platform/4.3/authentication/managing-security-context-constraints.html#security-context-constraints-command-reference_configuring-internal-oauth) to see the examples on the docs.
+Other than that for the SCC commands check [here](https://docs.openshift.com/container-platform/4.3/authentication/managing-security-context-constraints.html#security-context-constraints-command-reference_configuring-internal-oauth) to see the examples on the docs.
 
 Once we can see, create, edit and delete SCCs how can we bind them to our pods? One command that is pretty useful, overall in troubleshooting and developing, is the `oc adm policy` command. It’s pretty straightforward. Check these snippets from the context help:
 
@@ -148,12 +148,12 @@ Another important point is that not all users or service accounts will be listed
 
 #### Managing SCCs with Role Based Access Control
 
-When we create a role we may use a rule inside that role to define which SCCs we want available for the Service Accounts bound to that role. So the process is pretty simple. By mentioning the API group that is security. OpenShift.io, the type in the resources field that is securitycontextconstraints and adding the name and the verb “use”, that is what we want to do with it, we have a rule to compose the role. 
+When we create a role we may use a rule inside that role to define which SCCs we want available for the Service Accounts bound to that role. So the process is pretty simple. By mentioning the API group that is `security.openshift.io`, the type in the resources field that is securitycontextconstraints and adding the name and the verb “use”, that is what we want to do with it, we have a rule to compose the role. 
 
-If you want to know more how Role Based Access Control works inOpenShift take a look at [theOpenShift RBAC docs](https://docs. OpenShift.com/container-platform/4.3/authentication/using-rbac.html)
+If you want to know more how Role Based Access Control works in OpenShift take a look at [the OpenShift RBAC docs](https://docs.openshift.com/container-platform/4.3/authentication/using-rbac.html).
 
-If you want to check closely the type that represents the SCC check [here](https://github.com/ OpenShift/api/blob/0de0d539b0c32b2f1d7255c3100a7e92df2a99e2/security/v1/types.go#L24
-)
+If you want to check closely the type that represents the SCC check [here](https://github.com/openshift/api/blob/0de0d539b0c32b2f1d7255c3100a7e92df2a99e2/security/v1/types.go#L24
+).
 
 <img src='img/SCC_with_RBAC_Roles.png'></img>
 
@@ -176,7 +176,7 @@ Here is an example of a CSV snippet:
             - verbs:
                 - use
               apiGroups:
-                - security. OpenShift.io
+                - security.openshift.io
               resources:
                 - securitycontextconstraints
               resourceNames:
@@ -267,25 +267,25 @@ volumes:
 
 - Requires that a pod run as a user in a pre-allocated range of UIDs.
 
-When we talk about containers we have a few caveats to explore here because the container is namespaced. What that may mean is that if a particular container is using what we call user namespaces and UID mapping, we may end up having different users inside the container and outside the container for the same process. It's a complicated scheme that changes the way processes see their privileges across any type of Linux constructs in the file system depending on what namespace they are available. InOpenShift, at the time of this writing, those UIDs will be the same inside and outside the container meaning that the pod will be root on the host if the UID is 0. CRIO, the runtime engine can do UID mapping already, but the underlying Kubernetes platform is not prepared for that yet. That is out of scope here (we may explore this in future writings) but I think it’s an important thing to have in mind when considering UIDs. With the restricted SCC the Pod UID will be limited to a pre-allocated range of UIDs preventing any kind of manipulation that could lead to impersonation or illegal privilege escalation.
+When we talk about containers we have a few caveats to explore here because the container is namespaced. What that may mean is that if a particular container is using what we call user namespaces and UID mapping, we may end up having different users inside the container and outside the container for the same process. It's a complicated scheme that changes the way processes see their privileges across any type of Linux constructs in the file system depending on what namespace they are available. In OpenShift, at the time of this writing, those UIDs will be the same inside and outside the container meaning that the pod will be root on the host if the UID is 0. CRIO, the runtime engine can do UID mapping already, but the underlying Kubernetes platform is not prepared for that yet. That is out of scope here (we may explore this in future writings) but I think it’s an important thing to have in mind when considering UIDs. With the restricted SCC the Pod UID will be limited to a pre-allocated range of UIDs preventing any kind of manipulation that could lead to impersonation or illegal privilege escalation.
 
 - Requires that a pod run with a pre-allocated MCS label.
 
-MCS label stands for Multi Category Security label which is an enhancement to SELinux allowing users to label files with categories. SELinux comes enabled by default inOpenShift nodes and the Restricted SCC will use that resource to further restrict the Pods access protecting the host file system.
+MCS label stands for Multi Category Security label which is an enhancement to SELinux allowing users to label files with categories. SELinux comes enabled by default in OpenShift nodes and the Restricted SCC will use that resource to further restrict the Pods access protecting the host file system.
 
 - Allows pods to use any FSGroup.
 
-FSGroup is a special supplemental group that can be applied to all containers in a pod in order to enable them to own some specific volume on the host system. With this group set, kubelet is able to change the permission of that volume on behalf of the pod.
+FSGroup is a special supplemental group that can be applied to all containers in a pod in order to enable them to own some specific volume available on the host system. With this group set, kubelet is able to change the permission of that volume on behalf of the pod. And with that granting some flexibity in a safer way.
 
 - Allows pods to use any supplemental group.
 
-These are additional linux groups that can be added as well to the first process in each container granting some lower level user permissions to that process. 
+These are additional Linux groups that can be added as well to the first process in each container granting some lower privilege user permissions to that process. Here it adds some flexibility as well but adds the supplemental group as a control feature.
 
 #### Security Considerations When Not Using the Restricted SCC
 
 In general lines, if not using the Restricted SCC, you may have granted privileges to a Pod that can partially affect the host, other pods or containers or even get full root access on the host. That may happen letting the Pod run under any user ID while using the anyuid SCC, allowing most host features using the hostaccess SCC, allowing extra capabilities on the AllowCapabilties field or giving full root privileges with the privileged SCC for example. 
 
-If you have a very good case to use an SCC other than the Restricted SCC, it’s important to highlight that SCCs were designed to work with a good set of security resources available on the linux kernel. In general lines we can say: never run your pod as UID 0 or root. If you need a specific capability shoot for the least privileged one and do your best to use SELinux policies combined with Seccomp filtering and/or possibly AppArmor profiles. We will explore those features in future posts. The headline here is if going out of the standard Restricted scenario, for any reason, combine all the security technologies you can to protect your application and overall your data.
+If you have a very good case to use an SCC other than the Restricted SCC, it’s important to highlight that SCCs were designed to work with a good set of security resources available on the Linux kernel. In general lines we can say: never run your pod as UID 0 or root. If you need a specific capability shoot for the least privileged one and do your best to use SELinux policies combined with Seccomp filtering and/or possibly AppArmor profiles. We will explore those features in future posts. The headline here is if going out of the standard Restricted scenario, for any reason, combine all the security technologies you can to protect your application and overall your data.
 
 #### Conclusion
 
