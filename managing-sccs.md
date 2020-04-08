@@ -6,7 +6,7 @@ On the first post we looked into Linux and process privileges and saw how contai
 
 #### How does it actually work under the hood?
 
-Unfolding a little bit more on how the SCCs work we may ask: what insideOpenShift takes care of checking if a Pod complies or not to it? The admission process in the API server will take care of that.OpenShift comes equipped with 8 predefined Security Context Constraints that you can list using the `oc get scc` command. For those who are not familiar with them, here they are in an attempt to list from most restrictive to the least (but check the comments):
+Unfolding a little bit more on how the SCCs work we may ask: what insideOpenShift takes care of checking if a Pod complies or not to it? The admission process in the API server will take care of that. OpenShift comes equipped with 8 predefined Security Context Constraints that you can list using the `oc get scc` command. For those who are not familiar with them, here they are in an attempt to list from most restrictive to the least (but check the comments):
 |  SCC   |   Description  | Comments |
 |--------| ---------------|----------|
 |restricted|restricted denies access to all host features and requires pods to be run with a UID, and SELinux context that are allocated to the namespace.  This is the most restrictive SCC and it is used by default for authenticated users|In other words this is the most secure one. We explain it in detail further in this blog post.|
@@ -27,7 +27,7 @@ When first requesting a pod to the API server, the credential to authorize the p
 
 <img src='img/SCC_Admission_Simplified.png'></img>
 
-So the object requested only gets stored in Etcd, initiating a new pod creation, when it gets validated and matches the SCCs available otherwise it gets rejected and all the errors are logged. This is to get an idea of the complicated process that you can find on the apiserver-library-go (https://github.com/openshift/apiserver-library-go/blob/master/pkg/securitycontextconstraints/sccadmission/admission.go)
+So the object requested only gets stored in Etcd, initiating a new pod creation, when it gets validated and matches the SCCs available otherwise it gets rejected and all the errors are logged. This is to get an idea of the complicated process that you can find on the apiserver-library-go (https://github.com/ OpenShift/apiserver-library-go/blob/master/pkg/securitycontextconstraints/sccadmission/admission.go)
 
 #### Caution: 
 
@@ -60,7 +60,7 @@ users:
 groups:
 - my-admin-group
 ```
-Other than that for the SCC commands check [here](https://docs.openshift.com/container-platform/4.3/authentication/managing-security-context-constraints.html#security-context-constraints-command-reference_configuring-internal-oauth) to see the examples on the docs.
+Other than that for the SCC commands check [here](https://docs. OpenShift.com/container-platform/4.3/authentication/managing-security-context-constraints.html#security-context-constraints-command-reference_configuring-internal-oauth) to see the examples on the docs.
 
 Once we can see, create, edit and delete SCCs how can we bind them to our pods? One command that is pretty useful, overall in troubleshooting and developing, is the `oc adm policy` command. It’s pretty straightforward. Check these snippets from the context help:
 
@@ -130,7 +130,7 @@ Repeating the process we did for the user we can grant an SCC to a service accou
 
 `oc adm policy add-scc-to-user nonroot -z my-app-sa`
 ```
-securitycontextconstraints.security.openshift.io/nonroot added to: ["system:serviceaccount:scc-test:my-app-sa"]
+securitycontextconstraints.security. OpenShift.io/nonroot added to: ["system:serviceaccount:scc-test:my-app-sa"]
 ```
 Let’s check now what’s under the users field:
 `oc get scc nonroot -o yaml`
@@ -148,11 +148,11 @@ Another important point is that not all users or service accounts will be listed
 
 #### Managing SCCs with Role Based Access Control
 
-When we create a role we may use a rule inside that role to define which SCCs we want available for the Service Accounts bound to that role. So the process is pretty simple. By mentioning the API group that is security.openshift.io, the type in the resources field that is securitycontextconstraints and adding the name and the verb “use”, that is what we want to do with it, we have a rule to compose the role. 
+When we create a role we may use a rule inside that role to define which SCCs we want available for the Service Accounts bound to that role. So the process is pretty simple. By mentioning the API group that is security. OpenShift.io, the type in the resources field that is securitycontextconstraints and adding the name and the verb “use”, that is what we want to do with it, we have a rule to compose the role. 
 
-If you want to know more how Role Based Access Control works inOpenShift take a look at [theOpenShift RBAC docs](https://docs.openshift.com/container-platform/4.3/authentication/using-rbac.html)
+If you want to know more how Role Based Access Control works inOpenShift take a look at [theOpenShift RBAC docs](https://docs. OpenShift.com/container-platform/4.3/authentication/using-rbac.html)
 
-If you want to check closely the type that represents the SCC check [here](https://github.com/openshift/api/blob/0de0d539b0c32b2f1d7255c3100a7e92df2a99e2/security/v1/types.go#L24
+If you want to check closely the type that represents the SCC check [here](https://github.com/ OpenShift/api/blob/0de0d539b0c32b2f1d7255c3100a7e92df2a99e2/security/v1/types.go#L24
 )
 
 <img src='img/SCC_with_RBAC_Roles.png'></img>
@@ -176,7 +176,7 @@ Here is an example of a CSV snippet:
             - verbs:
                 - use
               apiGroups:
-                - security.openshift.io
+                - security. OpenShift.io
               resources:
                 - securitycontextconstraints
               resourceNames:
@@ -195,32 +195,32 @@ Troubleshooting SCCs can be quite challenging since it has so many ways to be co
 `oc adm policy who-can use scc nonroot`
 
 ```
-resourceaccessreviewresponse.authorization.openshift.io/<unknown>
+resourceaccessreviewresponse.authorization. OpenShift.io/<unknown>
 
 Namespace: scc-test
 Verb:      use
-Resource:  securitycontextconstraints.security.openshift.io
+Resource:  securitycontextconstraints.security. OpenShift.io
 
 Users:  system:admin
-        system:serviceaccount:openshift-apiserver-operator:openshift-apiserver-operator
-        system:serviceaccount:openshift-apiserver:openshift-apiserver-sa
-        system:serviceaccount:openshift-authentication-operator:authentication-operator
-        system:serviceaccount:openshift-authentication:oauth-openshift
-        system:serviceaccount:openshift-cluster-node-tuning-operator:cluster-node-tuning-operator
-        system:serviceaccount:openshift-cluster-version:default
-        system:serviceaccount:openshift-controller-manager-operator:openshift-controller-manager-operator
-        system:serviceaccount:openshift-kube-apiserver-operator:kube-apiserver-operator
-        system:serviceaccount:openshift-kube-apiserver:installer-sa
-        system:serviceaccount:openshift-kube-controller-manager-operator:kube-controller-manager-operator
-        system:serviceaccount:openshift-kube-controller-manager:installer-sa
-        system:serviceaccount:openshift-kube-scheduler-operator:openshift-kube-scheduler-operator
-        system:serviceaccount:openshift-kube-scheduler:installer-sa
-        system:serviceaccount:openshift-machine-config-operator:default
-        system:serviceaccount:openshift-network-operator:default
-        system:serviceaccount:openshift-operator-lifecycle-manager:olm-operator-serviceaccount
-        system:serviceaccount:openshift-service-ca-operator:service-ca-operator
-        system:serviceaccount:openshift-service-catalog-apiserver-operator:openshift-service-catalog-apiserver-operator
-        system:serviceaccount:openshift-service-catalog-controller-manager-operator:openshift-service-catalog-controller-manager-operator
+        system:serviceaccount: OpenShift-apiserver-operator: OpenShift-apiserver-operator
+        system:serviceaccount: OpenShift-apiserver: OpenShift-apiserver-sa
+        system:serviceaccount: OpenShift-authentication-operator:authentication-operator
+        system:serviceaccount: OpenShift-authentication:oauth- OpenShift
+        system:serviceaccount: OpenShift-cluster-node-tuning-operator:cluster-node-tuning-operator
+        system:serviceaccount: OpenShift-cluster-version:default
+        system:serviceaccount: OpenShift-controller-manager-operator: OpenShift-controller-manager-operator
+        system:serviceaccount: OpenShift-kube-apiserver-operator:kube-apiserver-operator
+        system:serviceaccount: OpenShift-kube-apiserver:installer-sa
+        system:serviceaccount: OpenShift-kube-controller-manager-operator:kube-controller-manager-operator
+        system:serviceaccount: OpenShift-kube-controller-manager:installer-sa
+        system:serviceaccount: OpenShift-kube-scheduler-operator: OpenShift-kube-scheduler-operator
+        system:serviceaccount: OpenShift-kube-scheduler:installer-sa
+        system:serviceaccount: OpenShift-machine-config-operator:default
+        system:serviceaccount: OpenShift-network-operator:default
+        system:serviceaccount: OpenShift-operator-lifecycle-manager:olm-operator-serviceaccount
+        system:serviceaccount: OpenShift-service-ca-operator:service-ca-operator
+        system:serviceaccount: OpenShift-service-catalog-apiserver-operator: OpenShift-service-catalog-apiserver-operator
+        system:serviceaccount: OpenShift-service-catalog-controller-manager-operator: OpenShift-service-catalog-controller-manager-operator
 Groups: system:cluster-admins
         system:masters
 
