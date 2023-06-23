@@ -2,7 +2,7 @@
 
 ## Why RHODS?
 
-Who would imagine that expressions such as Large Language Models (LLM's) and Neural Networks were to become popular concepts? Or when GPT for developers no longer would mean at a first glance "GUID partition table" but rather "Generative Pre-trained Transformer"? With all the buzz that Chat GPT and others such as MidJourney made on many social media and news channels we can clearly see we're definitely entering the era of AI. A time where all businesses are flying to reach inimaginable levels of automation in order to keep relevant and competitive in the marketplace. 
+Who would imagine that expressions such as Large Language Models (LLM's) and Neural Networks were to become popular concepts? Or when GPT for developers no longer would mean at a first glance "GUID partition table" but rather "Generative Pre-trained Transformer"? With all the buzz that Chat GPT and others such as MidJourney made on many social media and news channels we can clearly see we're definitely entering the era of AI. A time where all businesses are flying to reach inimaginable levels of automation in order to stay relevant and competitive in the marketplace. 
 
 This marketplace is definitely global, digital and challenges all boundaries including cultural, language and economic barriers. With billions of human beings connected 24 hours a day the toughest challenge is to be present where they are. That means having the ability to handle data anywhere from on-prem datacenters to multiple cloud providers, delivering and processing applications in the edge bringing back home the results. Talking to a myriad of devices composing the internet of things, each new service needs an extremely reliable and flexible platform to be deployed. 
 
