@@ -19,10 +19,8 @@ In the demo below we show how easy OpenShift Data Science can be installed throu
 <!-- Youtube URL -->
 https://www.youtube.com/watch?v=iQ6Cco3y920
 
-<!-- Corresponsing iframe markup copied from youtube embed of the corresponding video -->
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/iQ6Cco3y920" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-
+<a href="https://www.youtube.com/watch?feature=player_embedded&v=iQ6Cco3y920" target="_blank"><img src="https://img.youtube.com/vi/iQ6Cco3y920/0.jpg" width="240" height="180" border="0" /></a>
 ## Conclusion
 
 Now that you've become familiar with RHODS and saw how easy it is to install you may try it for free on [OpenShift Developer Sandbox](https://developers.redhat.com/developer-sandbox ). Thanks for reading and watching and stay tunned for more content on this space! 
