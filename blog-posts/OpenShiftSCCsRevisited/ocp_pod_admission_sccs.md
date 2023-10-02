@@ -14,16 +14,16 @@ The graph below shows the Workload Admission Flow in OpenShift as well as in Kub
 
 ## How does Pod Security Admission work?
 
-It works by separating policies in three different levels: privileged, baseline and restricted. Those levels are activated by namespace with application of a label on the respective namespace. Privileged is completely unrestricted, baseline has some restriction on certain privilege escalations and restricted is what the name implies the most restricted one.
+It works by separating policies in three different levels: privileged, baseline and restricted. Those levels are activated per namespace with application of a label on the respective namespace. Privileged is completely unrestricted, baseline has some restriction on certain privileged escalations and restricted is what the name implies the most restricted one.
 
 Each of those three levels can be configured in three different modes: 
-- `enforce`, rejecting creation on non compliant requests, 
-- `audit`, creating an entry in audit log but allowing creation, and 
-- `warn`, sending a warning message to the user but allowing creation. 
+- `enforce`: rejecting creation on non compliant requests. 
+- `audit`: creating an entry in audit log but allowing creation. 
+- `warn`: sending a warning message to the user but allowing creation. 
 
 Besides that those levels can be enabled simultaneously in the same namespace. Check the [Pod Security Admission docs](https://kubernetes.io/docs/concepts/security/pod-security-admission/) for more information.
 
-In OpenShift, the privileged level is enforced Globally. Another controller will synchronize the labels to match the highest privileged profile among the Service Accounts present in that namespace. For example, if a service account has access to use the privileged SCC, the labels will be updated with warn and audit on privileged level to prevent unnecessary warnings or audit entries. Exceptions to this rule are system namespaces such as `default`, the ones starting with `kube` or starting with `openshift` that are part of the cluster installation. Those namespaces have label synchronization permanently disabled. [Here](https://docs.openshift.com/container-platform/4.13/authentication/understanding-and-managing-pod-security-admission.html) you can find more details on label synchronization.
+In OpenShift, the privileged level is enforced Globally. Another controller will synchronize the labels to match the highest privileged profile among the Service Accounts present in that namespace. For example, if a service account has access to use the privileged SCC, the labels will be updated with warn and audit on privileged level to prevent unnecessary warnings or audit entries. Exceptions to this rule are system namespaces such as `default`, the ones starting with `kube` or starting with `openshift` that are part of the cluster installation. Those namespaces have label synchronization permanently disabled. [Here](https://docs.openshift.com/container-platform/latest/authentication/understanding-and-managing-pod-security-admission.html) you can find more details on label synchronization.
 
 Here is what happens when we bind a service account with a privileged SCC.
 
@@ -93,11 +93,11 @@ No LimitRange resource.
 ```
 ## How does that compare with Security Context Constraints?
 
-Security Context Constraints are evaluated by a different controller under the OpenShift API and is also part of the overall Pod Admission process in OpenShift giving a much more granular control over pod security contexts. It can be customized and could be considered as a different layer of defense. While Pod Security Standards are applied namespace wide to all pods created within a specific namespace by the use of labels, SCCs provide customizable validation applied to specific pods according to the service accounts running them by using RBAC. So instead of a label applied to a namespace we need a role or cluster role that allows the use of a SCC and a role or cluster role binding that ties that SCC to a service account.
+Security Context Constraints are evaluated by a different controller under the OpenShift API and is also part of the overall Pod Admission process in OpenShift giving a much more granular control over pod security contexts. It can be customized and could be considered as a different layer of defense. While Pod Security Standards are applied namespace wide to all pods created within a specific namespace by the use of labels, SCCs provide customizable validation applied to specific pods according to the service accounts running them by using RBAC. So instead of a label applied to a namespace we need a Role or ClusterRole that allows the use of a SCC and a RoleBinding or ClusterRoleBinding that ties that SCC to a service account.
 
-Since in OpenShift the pod admission by default is privileged, enforced globally and has the restricted setting only with warn and audit on all namespaces, SCCs will be required to further validate pod requests if no changes are made to pod admission settings. Besides that another controller will create new warn and audit labels for those namespaces where service accounts with SCC granted privileges exists.
+Since in OpenShift the pod admission by default is privileged, enforced globally and has the restricted setting only with warn and audit on all namespaces, SCCs will be required to further validate pod requests if no changes are made to pod admission settings. Besides that, another controller will create new warn and audit labels for those namespaces where service accounts with SCC granted privileges exists.
 
-In previous blog posts, I explored the definitions and explained how SSCs work in relation to Pod, containers and process privileges inside a worker node.
+In previous blog posts, I explored the definitions and explained how SSCs work in relation to Pods, Containers and process privileges inside a worker node.
 
 For reference you can check the links below:
 
